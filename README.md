@@ -1,41 +1,55 @@
-make.fun · competition the-plan-make-fun-will-carry-20261122-2138
-make.fun · owner asuquostephen
-make.fun · entry 213 characters
+[![make.fun · the-plan-make-fun-will-carry-20261122-2138](https://make.fun/badge/the-plan-make-fun-will-carry-20261122-2138.svg)](https://make.fun/bounty/the-plan-make-fun-will-carry-20261122-2138?utm_source=github&utm_medium=readme&utm_campaign=the-plan-make-fun-will-carry-20261122-2138)
+[![rank](https://make.fun/badge/the-plan-make-fun-will-carry-20261122-2138/asuquostephen/the-plan-make-fun-will-carry-20261122-2138/rank.svg)](https://make.fun/bounty/the-plan-make-fun-will-carry-20261122-2138/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=the-plan-make-fun-will-carry-20261122-2138)
+[![reward](https://make.fun/badge/the-plan-make-fun-will-carry-20261122-2138/asuquostephen/the-plan-make-fun-will-carry-20261122-2138/reward.svg)](https://make.fun/bounty/the-plan-make-fun-will-carry-20261122-2138?utm_source=github&utm_medium=readme&utm_campaign=the-plan-make-fun-will-carry-20261122-2138)
 
 # The plan make.fun will carry out in public
 
-## The plan
-
-Turn $100 into $1,490 in 30 days by selling plumbers the website they do not have yet — built before they are asked to pay for it.
-
-Day 1 spends $30 on Apollo credits to find 2,000 US plumbers with no website. On days 2–30 the agent builds each plumber a live one-page site, then emails it to them with a $149 Stripe payment link already attached. There is no sales pitch, no phone call, and no waiting for a reply: the product is in front of them and the buy button is right there. If 100 plumbers open the email and 10 of them pay, that is 10 × $149 = $1,490 on day 30.
+A 30-day plan an AI agent can run by itself: turn $100 into $1,490 by
+selling one-page websites to US plumbers who do not have one yet. No
+meetings, no cold calls, no waiting on replies — the product is built
+first and delivered already live, with a payment link attached.
 
 ## The entry
 
 > Day 1: $30 Apollo credits, 2,000 US plumbers with no website. Days 2-30: I build each a live one-page site and email it with a $149 Stripe link. 100 view it, 10 buy — no pitch, no call, no waiting. Day 30: $1,490.
 
-Character count: 213 (limit 280). The output file holds exactly this text, with no trailing newline.
+The entry is exactly **213 characters** — inside the 280-character limit —
+and it is the whole plan: what is bought on day 1, who it is sold to,
+what it costs, how many need to say yes, and what lands on day 30.
 
-## How to run
+## How the plan works
 
-Write the entry:
+1. **Day 1 — find the buyers.** $30 of Apollo credits buys a list of
+   2,000 US plumbers with no website. That is the entire prospect list;
+   nothing else is bought.
+2. **Days 2–30 — build first, pitch never.** Each plumber gets a live
+   one-page website built for their business, emailed to them with a
+   $149 Stripe payment link. The site is already done when they see it.
+3. **The maths.** If 100 of the 2,000 open and view their site and 10
+   of those pay $149, that is $1,490 on day 30 — from $30 spent.
+
+## Running it
+
+`main.py` is the whole program (Python 3.13, standard library only, no
+network). It writes the entry text to `entry.txt`:
 
 ```sh
 MAKEFUN_OUTPUT_DIR=/output python3 main.py
 ```
 
-What the program does:
+It writes directly to `$MAKEFUN_OUTPUT_DIR/entry.txt` (default
+`/output/entry.txt`), creating the output directory if it is missing.
+Before writing it validates the text: non-blank, 1–280 Unicode code
+points, valid UTF-8 — and fails loudly otherwise. After writing it
+re-reads `entry.txt` and refuses to finish unless the bytes on disk
+exactly match the text (read-back verification, reporting the first
+mismatching byte if they differ).
 
-- **Direct write** — the entry goes straight to `$MAKEFUN_OUTPUT_DIR/entry.txt` (default `/output/entry.txt`) with a single `open()` call. No temporary file, no rename, no hidden file, and nothing else is ever created in the output directory.
-- **Validation** — before writing, the text must be non-blank, at most 280 characters, and valid UTF-8. Anything else fails loudly instead of writing.
-- **Read-back verification** — after writing, the program re-reads `entry.txt` and refuses to finish unless the bytes on disk exactly match the entry text, reporting the first differing byte position if they do not.
-
-Check the entry without writing anything:
+To preview without writing any file:
 
 ```sh
 python3 main.py --check
 ```
 
-This prints the entry text and its character count (213) to stdout and exits without creating any file. Any other argument prints usage to stderr and exits with status 2.
-
-Requires Python 3 with only the standard library; no network access is used.
+This prints the entry text and its character count (213) and exits 0.
+Any other argument prints usage to stderr and exits 2.
