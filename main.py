@@ -9,13 +9,12 @@ single literal below; the output file contains exactly that text, encoded
 as UTF-8, with no trailing newline.
 
 Before writing, the text is validated: it must be non-blank, 1-280 Unicode
-code points, and encodable as UTF-8. The file is written atomically via a
-temporary file in the same directory followed by os.replace, so a reader
-never sees a partial entry.
+code points, and encodable as UTF-8. The file is written directly to
+entry.txt with a single open() call - no temporary file, no hidden file,
+no extra file ever appears in the output directory.
 """
 
 import os
-import tempfile
 
 ENTRY_TEXT = "Day 1: $30 Apollo credits, 2,000 US plumbers with no website. Days 2-30: I build each a live one-page site and email it with a $149 Stripe link. 100 view it, 10 buy — no pitch, no call, no waiting. Day 30: $1,490."
 
@@ -36,23 +35,17 @@ def validate_entry_text(text: str) -> None:
 
 
 def write_entry(output_dir: str) -> str:
-    """Validate the entry text and write it atomically. Return the path."""
+    """Validate the entry text and write it directly. Return the path."""
     validate_entry_text(ENTRY_TEXT)
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, "entry.txt")
-    fd, tmp_path = tempfile.mkstemp(
-        dir=output_dir, prefix=".entry-", suffix=".tmp"
-    )
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="") as f:
-            f.write(ENTRY_TEXT)
-        os.replace(tmp_path, output_path)
-    except BaseException:
-        try:
-            os.unlink(tmp_path)
-        except OSError:
-            pass
-        raise
+    with open(output_path, "w", encoding="utf-8", newline="") as f:
+        f.write(ENTRY_TEXT)
+    # Read the file back and verify it holds exactly the entry text.
+    with open(output_path, "rb") as f:
+        written = f.read()
+    if written != ENTRY_TEXT.encode("utf-8"):
+        raise ValueError("read-back verification failed: entry.txt mismatch")
     return output_path
 
 
