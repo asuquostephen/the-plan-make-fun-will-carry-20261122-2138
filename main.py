@@ -7,20 +7,72 @@ Competition: the-plan-make-fun-will-carry-20261122-2138
 Deterministic, standard library only, no network access. The entry is a
 single literal below; the output file contains exactly that text, encoded
 as UTF-8, with no trailing newline.
+
+Before writing, the text is validated: it must be non-blank, 1-280 Unicode
+code points, and encodable as UTF-8. The file is written atomically via a
+temporary file in the same directory followed by os.replace, so a reader
+never sees a partial entry.
 """
 
 import os
+import tempfile
 
-ENTRY_TEXT = "Day 1: $30 Apollo credits, 2,000 US plumbers with no website. Days 2-30: I build each a live one-page site and email it with a $149 Stripe link. 100 view it, 10 buy \u2014 no pitch, no call, no waiting. Day 30: $1,490."
+ENTRY_TEXT = "Day 1: $30 Apollo credits, 2,000 US plumbers with no website. Days 2-30: I build each a live one-page site and email it with a $149 Stripe link. 100 view it, 10 buy — no pitch, no call, no waiting. Day 30: $1,490."
+
+MAX_CHARS = 280
 
 
-def main() -> None:
-    output_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
+def validate_entry_text(text: str) -> None:
+    """Raise ValueError unless text is a valid competition entry."""
+    if not isinstance(text, str):
+        raise ValueError("entry text must be a string")
+    if not text.strip():
+        raise ValueError("entry text must not be blank")
+    text.encode("utf-8")  # raises UnicodeEncodeError if not valid UTF-8
+    if not 1 <= len(text) <= MAX_CHARS:
+        raise ValueError(
+            f"entry text must be 1-{MAX_CHARS} characters, got {len(text)}"
+        )
+
+
+def write_entry(output_dir: str) -> str:
+    """Validate the entry text and write it atomically. Return the path."""
+    validate_entry_text(ENTRY_TEXT)
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, "entry.txt")
-    with open(output_path, "w", encoding="utf-8", newline="") as f:
-        f.write(ENTRY_TEXT)
+    fd, tmp_path = tempfile.mkstemp(
+        dir=output_dir, prefix=".entry-", suffix=".tmp"
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as f:
+            f.write(ENTRY_TEXT)
+        os.replace(tmp_path, output_path)
+    except BaseException:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
+    return output_path
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the entry writer, or --check to print the text and exit."""
+    import sys
+
+    args = list(sys.argv[1:] if argv is None else argv)
+    if args == ["--check"]:
+        validate_entry_text(ENTRY_TEXT)
+        print(ENTRY_TEXT)
+        print(f"characters: {len(ENTRY_TEXT)}")
+        return 0
+    if args:
+        print("usage: main.py [--check]", file=sys.stderr)
+        return 2
+    output_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
+    write_entry(output_dir)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -19,3 +19,13 @@ python3 main.py
 ```
 
 This writes the entry text to `$MAKEFUN_OUTPUT_DIR/entry.txt` (default `/output/entry.txt`), creating the output directory if needed. Python 3.13, standard library only, no network access. The output is deterministic: running it twice produces byte-identical files.
+
+Before writing, the text is validated: it must be non-blank, 1–280 Unicode code points, and valid UTF-8. The file is written atomically — via a temporary file in the same directory followed by `os.replace` — so a reader never sees a partial entry.
+
+To inspect the entry without writing any file:
+
+```sh
+python3 main.py --check
+```
+
+This prints the entry text and its character count (213) to stdout and exits without creating a file.
